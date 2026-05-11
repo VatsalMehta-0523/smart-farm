@@ -1,0 +1,165 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Design Tokens ─────────────────────────────────────────────────────────── */
+:root {
+  --forest-deep:    #1B5E1B;
+  --forest-mid:     #2e7d2e;
+  --sage:           #52B788;
+  --sage-light:     #70b360;
+  --cream:          #FAFAF5;
+  --cream-warm:     #F5F0E8;
+  --earth:          #5C4033;
+  --text-primary:   #1A1A18;
+  --text-muted:     #6B7280;
+  --border:         #E5DED4;
+}
+
+/* ─── Base Resets ──────────────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background-color: var(--cream);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Scrollbar Styling ─────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--sage);
+  border-radius: 999px;
+}
+
+/* ─── Hide scrollbar for filter strip ──────────────────────────────────────── */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ─── Skeleton Shimmer ──────────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #e8e4dc 25%,
+    #f0ece4 50%,
+    #e8e4dc 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ─── Card Glass Effect ─────────────────────────────────────────────────────── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* ─── Plant Card Image Overlay ──────────────────────────────────────────────── */
+.plant-card-image-overlay {
+  background: linear-gradient(
+    to top,
+    rgba(15, 50, 15, 0.7) 0%,
+    rgba(15, 50, 15, 0.2) 50%,
+    transparent 100%
+  );
+}
+
+/* ─── Top Bar Blur ──────────────────────────────────────────────────────────── */
+.topbar-blur {
+  background: rgba(250, 250, 245, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* ─── Organic Background Pattern ───────────────────────────────────────────── */
+.organic-bg {
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(82, 183, 136, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(27, 94, 27, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(82, 183, 136, 0.04) 0%, transparent 50%);
+}
+
+/* ─── Modal Overlay ─────────────────────────────────────────────────────────── */
+.modal-overlay {
+  background: rgba(10, 34, 10, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+/* ─── Step Indicator ────────────────────────────────────────────────────────── */
+.step-dot {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Input Focus Ring ──────────────────────────────────────────────────────── */
+.input-field {
+  @apply w-full px-4 py-3 rounded-xl border border-cream-300 bg-white
+         font-body text-sm text-gray-900 placeholder-gray-400
+         focus:outline-none focus:ring-2 focus:ring-forest-500/30 focus:border-forest-500
+         transition-all duration-200;
+}
+
+.textarea-field {
+  @apply input-field resize-none;
+}
+
+/* ─── Primary Button ────────────────────────────────────────────────────────── */
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2
+         px-6 py-3 rounded-xl font-body font-semibold text-sm text-white
+         bg-forest-700 hover:bg-forest-600 active:bg-forest-800
+         transition-all duration-200 shadow-sm hover:shadow-md
+         disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2
+         px-6 py-3 rounded-xl font-body font-medium text-sm
+         text-forest-700 bg-forest-100 hover:bg-forest-200
+         border border-forest-200
+         transition-all duration-200
+         disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-ghost {
+  @apply inline-flex items-center justify-center gap-2
+         px-4 py-2 rounded-lg font-body text-sm text-gray-600
+         hover:bg-gray-100 hover:text-gray-900
+         transition-all duration-200;
+}
+
+.btn-danger {
+  @apply inline-flex items-center justify-center gap-2
+         px-6 py-3 rounded-xl font-body font-semibold text-sm text-white
+         bg-red-600 hover:bg-red-700
+         transition-all duration-200;
+}
+
+/* ─── Tag / Badge ───────────────────────────────────────────────────────────── */
+.tag {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body;
+}
+
+/* ─── Drag Handle ───────────────────────────────────────────────────────────── */
+.drag-handle { cursor: grab; }
+.drag-handle:active { cursor: grabbing; }
+
+/* ─── Animations ────────────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
