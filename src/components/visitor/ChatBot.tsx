@@ -75,12 +75,12 @@ export default function ChatBot() {
     <>
       {/* Floating Button */}
       <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.92 }}
         onClick={() => setIsOpen(true)}
         className="fixed bottom-6 right-4 z-40 w-14 h-14 rounded-full
                    bg-forest-700 shadow-lg flex items-center justify-center
-                   hover:bg-forest-600 transition-colors"
+                   hover:bg-forest-600 transition-colors chat-fab-glow"
         aria-label="Open chat"
       >
         <MessageCircle className="w-6 h-6 text-white" />

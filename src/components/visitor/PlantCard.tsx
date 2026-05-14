@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ExternalLink, Leaf } from 'lucide-react';
@@ -14,31 +15,57 @@ interface PlantCardProps {
 
 export default function PlantCard({ plant, index }: PlantCardProps) {
   const router = useRouter();
-  const primaryImage = plant.plant_images?.[0]?.url;
+  const images = plant.plant_images ?? [];
   const tags = plant.plant_tags?.slice(0, 2) ?? [];
+  const [activeImage, setActiveImage] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Auto-cycle images every 3 seconds
+  useEffect(() => {
+    if (images.length <= 1 || isPaused) return;
+    const timer = setInterval(() => {
+      setActiveImage((prev) => (prev + 1) % images.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [images.length, isPaused]);
+
+  const currentImageUrl = images[activeImage]?.url;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: index * 0.05, ease: 'easeOut' }}
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.4, delay: index * 0.07, ease: [0.25, 0.46, 0.45, 0.94] }}
+      whileHover={{ y: -4, transition: { duration: 0.25 } }}
+      whileTap={{ scale: 0.97 }}
       layout
       onClick={() => router.push(`/plant/${plant.id}`)}
       className="relative bg-white rounded-2xl overflow-hidden shadow-card
-                 hover:shadow-card-hover active:scale-[0.98]
-                 transition-all duration-300 cursor-pointer border border-cream-200"
+                 hover:shadow-card-hover
+                 transition-shadow duration-300 cursor-pointer border border-cream-200"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={() => setIsPaused(true)}
+      onTouchEnd={() => setIsPaused(false)}
     >
-      {/* Image Section */}
+      {/* Image Section with Auto-Scroll */}
       <div className="relative aspect-[4/3] overflow-hidden bg-forest-50">
-        {primaryImage ? (
+        {currentImageUrl ? (
           <>
-            <Image
-              src={primaryImage}
-              alt={plant.name}
-              fill
-              className="object-cover transition-transform duration-500 hover:scale-105"
-              sizes="(max-width: 768px) 50vw, 33vw"
-            />
+            {/* Preload all images for smooth transitions */}
+            {images.map((img, i) => (
+              <Image
+                key={img.id}
+                src={img.url}
+                alt={plant.name}
+                fill
+                className={`object-cover transition-opacity duration-700 ease-in-out ${
+                  i === activeImage ? 'opacity-100' : 'opacity-0'
+                }`}
+                sizes="(max-width: 768px) 50vw, 33vw"
+                priority={i === 0 && index < 4}
+              />
+            ))}
             <div className="absolute inset-0 plant-card-image-overlay" />
           </>
         ) : (
@@ -56,6 +83,22 @@ export default function PlantCard({ plant, index }: PlantCardProps) {
                              bg-white/90 text-forest-700 backdrop-blur-sm">
               {plant.plant_categories.name}
             </span>
+          </div>
+        )}
+
+        {/* Image Dot Indicators */}
+        {images.length > 1 && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+            {images.map((_, i) => (
+              <span
+                key={i}
+                className={`block rounded-full transition-all duration-300 ${
+                  i === activeImage
+                    ? 'w-3 h-1.5 bg-white'
+                    : 'w-1.5 h-1.5 bg-white/50'
+                }`}
+              />
+            ))}
           </div>
         )}
       </div>

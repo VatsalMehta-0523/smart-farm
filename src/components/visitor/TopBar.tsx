@@ -49,13 +49,18 @@ export default function TopBar({ searchQuery, onSearchChange, onQRClick }: TopBa
       {/* Row 1 — Brand + Actions */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         {/* Farm Logo / Name */}
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-forest-700 flex items-center justify-center">
-            <Leaf className="w-4 h-4 text-white" strokeWidth={2.5} />
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-full bg-forest-700 flex items-center justify-center shadow-sm">
+            <Leaf className="w-4.5 h-4.5 text-white" strokeWidth={2.5} />
           </div>
-          <span className="font-display font-semibold text-lg text-forest-800 leading-none">
-            {APP.name}
-          </span>
+          <div className="flex flex-col leading-none">
+            <span className="font-hindi text-xl text-forest-800 leading-tight tracking-wide">
+              कृपा &amp; यत्न
+            </span>
+            <span className="font-body text-[10px] text-gray-500 uppercase tracking-widest mt-0.5">
+              Smart Farm
+            </span>
+          </div>
         </div>
 
         {/* Right Actions */}

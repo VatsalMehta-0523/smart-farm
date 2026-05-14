@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Camera, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,23 +13,34 @@ interface QRScannerProps {
 export default function QRScanner({ isOpen, onClose }: QRScannerProps) {
   const router = useRouter();
   const scannerRef = useRef<{ stop: () => Promise<void> } | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const containerId = 'qr-reader-container';
 
+  // Wait for the container to be in the DOM before starting the scanner
+  const containerCallbackRef = useCallback((node: HTMLDivElement | null) => {
+    containerRef.current = node;
+    if (node) {
+      setMounted(true);
+    }
+  }, []);
+
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !mounted || !containerRef.current) return;
     setError(null);
 
     let stopped = false;
 
     const startScanner = async () => {
-      // Dynamically import to avoid SSR issues
       const { Html5Qrcode } = await import('html5-qrcode');
 
-      // Wait for DOM
-      await new Promise((r) => setTimeout(r, 200));
-      if (stopped) return;
+      if (stopped || !containerRef.current) return;
+
+      // Clear any leftover children from previous scan attempts
+      const el = document.getElementById(containerId);
+      if (el) el.innerHTML = '';
 
       const html5Qrcode = new Html5Qrcode(containerId);
       scannerRef.current = html5Qrcode as unknown as { stop: () => Promise<void> };
@@ -56,6 +67,8 @@ export default function QRScanner({ isOpen, onClose }: QRScannerProps) {
         const message = err instanceof Error ? err.message : String(err);
         if (message.includes('permission') || message.includes('NotAllowed')) {
           setError('Camera permission denied. Please allow camera access and try again.');
+        } else if (message.includes('NotFound') || message.includes('DevicesNotFound')) {
+          setError('No camera found on this device.');
         } else {
           setError('Unable to start camera. Please try again.');
         }
@@ -72,14 +85,30 @@ export default function QRScanner({ isOpen, onClose }: QRScannerProps) {
         scannerRef.current = null;
       }
     };
-  }, [isOpen, router, onClose]);
+  }, [isOpen, mounted, router, onClose]);
+
+  // Reset mounted state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setMounted(false);
+      setScanning(false);
+    }
+  }, [isOpen]);
 
   const handleClose = async () => {
     if (scannerRef.current) {
       await scannerRef.current.stop().catch(() => {});
       scannerRef.current = null;
     }
+    setMounted(false);
     onClose();
+  };
+
+  const handleRetry = () => {
+    setError(null);
+    setMounted(false);
+    // Re-trigger mount after a tick
+    setTimeout(() => setMounted(true), 100);
   };
 
   return (
@@ -105,7 +134,7 @@ export default function QRScanner({ isOpen, onClose }: QRScannerProps) {
               <div>
                 <h2 className="font-display font-semibold text-lg text-white">Scan Plant QR</h2>
                 <p className="text-xs text-forest-300 font-body mt-0.5">
-                  Point your camera at a plant's QR code
+                  Point your camera at a plant&apos;s QR code
                 </p>
               </div>
               <button
@@ -119,7 +148,7 @@ export default function QRScanner({ isOpen, onClose }: QRScannerProps) {
 
             {/* Scanner Area */}
             <div className="relative bg-black aspect-square">
-              <div id={containerId} className="w-full h-full" />
+              <div id={containerId} ref={containerCallbackRef} className="w-full h-full" />
 
               {/* Viewfinder overlay */}
               {scanning && !error && (
@@ -145,7 +174,7 @@ export default function QRScanner({ isOpen, onClose }: QRScannerProps) {
                   <AlertCircle className="w-10 h-10 text-red-400 mb-3" />
                   <p className="text-sm text-white font-body leading-relaxed">{error}</p>
                   <button
-                    onClick={() => setError(null)}
+                    onClick={handleRetry}
                     className="mt-4 px-4 py-2 bg-sage-500 rounded-xl text-white text-sm font-medium"
                   >
                     Try Again

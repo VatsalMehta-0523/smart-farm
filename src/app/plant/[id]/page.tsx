@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import {
   ArrowLeft, ExternalLink, Leaf, FlaskConical,
-  BookOpen, Dna, Sparkles, ChevronLeft, ChevronRight
+  BookOpen, Dna, Sparkles, ChevronLeft, ChevronRight, Home
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getSupabaseClient } from '@/lib/supabase';
@@ -49,6 +49,15 @@ export default function PlantPage() {
     fetchPlant();
   }, [params.id]);
 
+  // Smart back navigation: if no browser history, go to homepage
+  const handleBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push('/');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-cream-50 flex items-center justify-center">
@@ -79,6 +88,15 @@ export default function PlantPage() {
     ? Object.entries(plant.genome_data as Record<string, string>)
     : [];
 
+  // Animation variants for content sections
+  const sectionVariants = {
+    hidden: { opacity: 0, y: 16 },
+    visible: (i: number) => ({
+      opacity: 1, y: 0,
+      transition: { delay: 0.1 + i * 0.08, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }
+    }),
+  };
+
   return (
     <div className="min-h-screen bg-cream-50 pb-28">
       {/* Hero Image Gallery */}
@@ -87,10 +105,10 @@ export default function PlantPage() {
           {images.length > 0 ? (
             <motion.div
               key={activeImage}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, scale: 1.05 }}
+              animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.5 }}
               className="absolute inset-0"
             >
               <Image
@@ -109,14 +127,26 @@ export default function PlantPage() {
           )}
         </AnimatePresence>
 
-        {/* Back Button */}
+        {/* Back Button — smart navigation */}
         <button
-          onClick={() => router.back()}
+          onClick={handleBack}
           className="absolute top-4 left-4 z-10 w-10 h-10 rounded-full
                      bg-white/20 backdrop-blur-sm flex items-center justify-center
-                     hover:bg-white/30 transition-colors border border-white/30"
+                     hover:bg-white/30 transition-all duration-200 border border-white/30
+                     active:scale-90"
         >
           <ArrowLeft className="w-5 h-5 text-white" />
+        </button>
+
+        {/* Home Button — always visible, top-right */}
+        <button
+          onClick={() => router.push('/')}
+          className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full
+                     bg-white/20 backdrop-blur-sm flex items-center justify-center
+                     hover:bg-white/30 transition-all duration-200 border border-white/30
+                     active:scale-90"
+        >
+          <Home className="w-5 h-5 text-white" />
         </button>
 
         {/* Image Navigation */}
@@ -157,31 +187,67 @@ export default function PlantPage() {
         {/* Plant name overlay */}
         <div className="absolute bottom-6 left-5 right-5 z-10">
           {plant.plant_categories?.name && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full
-                             text-[10px] font-semibold font-body uppercase tracking-wider
-                             bg-sage-500/90 text-white mb-2">
+            <motion.span
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center px-2.5 py-0.5 rounded-full
+                         text-[10px] font-semibold font-body uppercase tracking-wider
+                         bg-sage-500/90 text-white mb-2"
+            >
               {plant.plant_categories.name}
-            </span>
+            </motion.span>
           )}
-          <h1 className="font-display font-bold text-2xl text-white leading-tight drop-shadow-md">
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="font-display font-bold text-2xl text-white leading-tight drop-shadow-md"
+          >
             {plant.name}
-          </h1>
+          </motion.h1>
           {plant.scientific_name && (
-            <p className="text-sm italic text-white/70 font-body mt-0.5">
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="text-sm italic text-white/70 font-body mt-0.5"
+            >
               {plant.scientific_name}
-            </p>
+            </motion.p>
           )}
         </div>
       </div>
 
+      {/* Go Home Pill — visible below hero for easy navigation */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="flex justify-center -mt-4 relative z-20 mb-2"
+      >
+        <button
+          onClick={() => router.push('/')}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full
+                     bg-white shadow-card border border-cream-200
+                     text-xs font-semibold font-body text-forest-700
+                     hover:shadow-card-hover hover:border-forest-300
+                     transition-all duration-200 active:scale-95"
+        >
+          <Home className="w-3.5 h-3.5" />
+          Explore Farm
+        </button>
+      </motion.div>
+
       {/* Content */}
-      <div className="px-4 pt-6 space-y-5 max-w-2xl mx-auto">
+      <div className="px-4 pt-2 space-y-5 max-w-2xl mx-auto">
         {/* Overview */}
         {plant.short_desc && (
           <motion.section
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            custom={0}
+            initial="hidden"
+            animate="visible"
+            variants={sectionVariants}
             className="bg-white rounded-2xl p-5 shadow-card border border-cream-200"
           >
             <div className="flex items-center gap-2 mb-3">
@@ -197,9 +263,10 @@ export default function PlantPage() {
         {/* Medicinal Uses */}
         {plant.medicinal_uses && (
           <motion.section
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
+            custom={1}
+            initial="hidden"
+            animate="visible"
+            variants={sectionVariants}
             className="bg-white rounded-2xl p-5 shadow-card border border-cream-200"
           >
             <div className="flex items-center gap-2 mb-3">
@@ -215,9 +282,10 @@ export default function PlantPage() {
         {/* Folklore */}
         {plant.folklore && (
           <motion.section
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            custom={2}
+            initial="hidden"
+            animate="visible"
+            variants={sectionVariants}
             className="bg-white rounded-2xl p-5 shadow-card border border-cream-200"
           >
             <div className="flex items-center gap-2 mb-3">
@@ -225,7 +293,7 @@ export default function PlantPage() {
                 <BookOpen className="w-3.5 h-3.5 text-amber-700" />
               </div>
               <h2 className="font-display font-semibold text-base text-forest-900">
-                Folklore & Tradition
+                Folklore &amp; Tradition
               </h2>
             </div>
             <p className="text-sm text-gray-700 font-body leading-relaxed italic">
@@ -237,9 +305,10 @@ export default function PlantPage() {
         {/* Genome / Scientific Data */}
         {genomeEntries.length > 0 && (
           <motion.section
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
+            custom={3}
+            initial="hidden"
+            animate="visible"
+            variants={sectionVariants}
             className="bg-white rounded-2xl p-5 shadow-card border border-cream-200"
           >
             <div className="flex items-center gap-2 mb-3">
@@ -267,9 +336,10 @@ export default function PlantPage() {
         {/* Tags */}
         {(plant.plant_tags?.length ?? 0) > 0 && (
           <motion.section
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            custom={4}
+            initial="hidden"
+            animate="visible"
+            variants={sectionVariants}
           >
             <div className="flex flex-wrap gap-2">
               {plant.plant_tags!.map((t) => (
@@ -290,9 +360,10 @@ export default function PlantPage() {
         {/* Wikipedia */}
         {plant.wikipedia_url && (
           <motion.a
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
+            custom={5}
+            initial="hidden"
+            animate="visible"
+            variants={sectionVariants}
             href={plant.wikipedia_url}
             target="_blank"
             rel="noopener noreferrer"

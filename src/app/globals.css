@@ -163,3 +163,22 @@ body {
 .animate-fade-in-up {
   animation: fadeInUp 0.4s ease-out forwards;
 }
+
+/* ─── Chat FAB Glow ────────────────────────────────────────────────────────── */
+@keyframes fabGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(27, 94, 27, 0.4); }
+  50%      { box-shadow: 0 0 0 10px rgba(27, 94, 27, 0); }
+}
+
+.chat-fab-glow {
+  animation: fabGlow 2.5s ease-in-out infinite;
+}
+
+/* ─── Card Lift Hover ──────────────────────────────────────────────────────── */
+.card-lift {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(27, 94, 27, 0.12);
+}

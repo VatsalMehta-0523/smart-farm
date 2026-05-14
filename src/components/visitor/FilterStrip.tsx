@@ -23,19 +23,21 @@ export default function FilterStrip({ active, onChange }: FilterStripProps) {
       {FILTER_CHIPS.map((chip) => {
         const isActive = active === chip.value;
         return (
-          <button
+          <motion.button
             key={chip.value}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.93 }}
             onClick={() => onChange(chip.value as FilterCategory)}
             className={cn(
               'flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium font-body',
-              'transition-all duration-200 active:scale-95 whitespace-nowrap',
+              'transition-all duration-200 whitespace-nowrap',
               isActive
                 ? 'bg-forest-700 text-white shadow-sm'
                 : 'bg-white text-gray-600 border border-cream-300 hover:border-forest-400 hover:text-forest-700'
             )}
           >
             {chip.label}
-          </button>
+          </motion.button>
         );
       })}
     </div>

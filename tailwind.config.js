@@ -49,6 +49,7 @@ module.exports = {
       fontFamily: {
         display: ['var(--font-cormorant)', 'Georgia', 'serif'],
         body: ['var(--font-outfit)', 'system-ui', 'sans-serif'],
+        hindi: ['var(--font-tiro)', 'serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.4s ease-out forwards',
