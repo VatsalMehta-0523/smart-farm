@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Edit2, Trash2, Download, QrCode, Eye, Leaf, Search, Plus } from 'lucide-react';
+import { Edit2, Trash2, Download, QrCode, Eye, Leaf, Search, Plus, Loader2 } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 import { type PlantWithRelations, type PlantCategory } from '@/types';
 import { STATUS_COLORS, STATUS_LABELS, UI } from '@/lib/constants';
@@ -25,6 +25,7 @@ export default function PlantTable({ plants, categories, onRefresh }: PlantTable
   const [previewPlant, setPreviewPlant] = useState<PlantWithRelations | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PlantWithRelations | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [generatingQR, setGeneratingQR] = useState<Record<string, boolean>>({});
 
   const filtered = plants.filter((p) =>
     !search.trim() ||
@@ -40,6 +41,24 @@ export default function PlantTable({ plants, categories, onRefresh }: PlantTable
     setDeleting(false);
     setDeleteTarget(null);
     onRefresh();
+  };
+
+  const handleGenerateQR = async (plant: PlantWithRelations) => {
+    if (plant.qr_url || generatingQR[plant.id]) return;
+    setGeneratingQR((prev) => ({ ...prev, [plant.id]: true }));
+    try {
+      const supabase = getSupabaseClient();
+      const { data, error } = await supabase.functions.invoke('generate-qr', {
+        body: { plantId: plant.id },
+      });
+      if (!error && data?.qrUrl) {
+        onRefresh();
+      }
+    } catch {
+      // QR generation failed — user can retry
+    } finally {
+      setGeneratingQR((prev) => ({ ...prev, [plant.id]: false }));
+    }
   };
 
   const handleDownloadPDF = async (plant: PlantWithRelations) => {
@@ -190,7 +209,7 @@ export default function PlantTable({ plants, categories, onRefresh }: PlantTable
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          {plant.qr_url && (
+                          {plant.qr_url ? (
                             <a
                               href={plant.qr_url}
                               download
@@ -201,6 +220,21 @@ export default function PlantTable({ plants, categories, onRefresh }: PlantTable
                             >
                               <QrCode className="w-4 h-4" />
                             </a>
+                          ) : (
+                            <button
+                              onClick={() => handleGenerateQR(plant)}
+                              disabled={generatingQR[plant.id]}
+                              title="Generate QR Code"
+                              className="w-8 h-8 rounded-lg hover:bg-forest-50 flex items-center justify-center
+                                         text-amber-500 hover:text-forest-600 transition-colors
+                                         border border-dashed border-amber-300 hover:border-forest-400"
+                            >
+                              {generatingQR[plant.id] ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <QrCode className="w-4 h-4" />
+                              )}
+                            </button>
                           )}
                           <button
                             onClick={() => handleDownloadPDF(plant)}
@@ -261,6 +295,14 @@ export default function PlantTable({ plants, categories, onRefresh }: PlantTable
             plant={previewPlant}
             onClose={() => setPreviewPlant(null)}
             onEdit={handleEditFromPreview}
+            onGenerateQR={async (plantId: string) => {
+              const supabase = getSupabaseClient();
+              await supabase.functions.invoke('generate-qr', {
+                body: { plantId },
+              });
+              setPreviewPlant(null);
+              onRefresh();
+            }}
           />
         )}
         {deleteTarget && (

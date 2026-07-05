@@ -1,19 +1,24 @@
 'use client';
 
 import Image from 'next/image';
-import { X, ExternalLink, Leaf, FlaskConical, BookOpen, Dna, Edit } from 'lucide-react';
+import { X, ExternalLink, Leaf, FlaskConical, BookOpen, Dna, Edit, QrCode, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { type PlantWithRelations } from '@/types';
 import { STATUS_COLORS, STATUS_LABELS } from '@/lib/constants';
 import { formatDate } from '@/lib/utils';
 
+import { useState } from 'react';
+import { getSupabaseClient } from '@/lib/supabase';
+
 interface PlantPreviewModalProps {
   plant: PlantWithRelations;
   onClose: () => void;
   onEdit: () => void;
+  onGenerateQR?: (plantId: string) => Promise<void>;
 }
 
-export default function PlantPreviewModal({ plant, onClose, onEdit }: PlantPreviewModalProps) {
+export default function PlantPreviewModal({ plant, onClose, onEdit, onGenerateQR }: PlantPreviewModalProps) {
+  const [generatingQR, setGeneratingQR] = useState(false);
   const images = [...(plant.plant_images ?? [])].sort((a, b) => a.order_index - b.order_index);
   const primaryImage = images[0]?.url;
   const genomeEntries = plant.genome_data
@@ -86,11 +91,44 @@ export default function PlantPreviewModal({ plant, onClose, onEdit }: PlantPrevi
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           <div className="flex items-center gap-3 text-xs text-gray-400 font-body">
             <span>Added {formatDate(plant.created_at)}</span>
-            {plant.qr_url && (
+            {plant.qr_url ? (
               <>
                 <span>·</span>
                 <a href={plant.qr_url} target="_blank" rel="noopener noreferrer"
                    className="text-forest-600 hover:underline">View QR</a>
+              </>
+            ) : (
+              <>
+                <span>·</span>
+                <button
+                  onClick={async () => {
+                    if (generatingQR) return;
+                    setGeneratingQR(true);
+                    try {
+                      if (onGenerateQR) {
+                        await onGenerateQR(plant.id);
+                      } else {
+                        const supabase = getSupabaseClient();
+                        await supabase.functions.invoke('generate-qr', {
+                          body: { plantId: plant.id },
+                        });
+                      }
+                    } catch {
+                      // QR generation failed
+                    } finally {
+                      setGeneratingQR(false);
+                    }
+                  }}
+                  disabled={generatingQR}
+                  className="inline-flex items-center gap-1 text-amber-600 hover:text-forest-600
+                             font-medium transition-colors"
+                >
+                  {generatingQR ? (
+                    <><Loader2 className="w-3 h-3 animate-spin" /> Generating…</>
+                  ) : (
+                    <><QrCode className="w-3 h-3" /> Generate QR</>
+                  )}
+                </button>
               </>
             )}
           </div>

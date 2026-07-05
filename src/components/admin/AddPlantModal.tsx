@@ -493,6 +493,49 @@ export default function AddPlantModal({
                         Download QR Image
                       </a>
                     </div>
+                  ) : isEdit ? (
+                    <div className="text-center py-6 space-y-4 w-full">
+                      <div className="w-40 h-40 bg-amber-50 rounded-2xl mx-auto flex items-center justify-center
+                                      border-2 border-dashed border-amber-300">
+                        <QrCode className="w-12 h-12 text-amber-400" />
+                      </div>
+                      <p className="text-sm text-gray-500 font-body">
+                        No QR code has been generated for this plant yet.
+                      </p>
+                      <button
+                        onClick={async () => {
+                          const plantId = generatedId ?? editPlant?.id;
+                          if (!plantId) return;
+                          setSaving(true);
+                          try {
+                            const supabase = getSupabaseClient();
+                            const { data } = await supabase.functions.invoke('generate-qr', {
+                              body: { plantId },
+                            });
+                            if (data?.qrUrl) setQrUrl(data.qrUrl);
+                          } catch {
+                            // QR generation failed — user can retry
+                          } finally {
+                            setSaving(false);
+                          }
+                        }}
+                        disabled={saving}
+                        className="btn-primary mx-auto"
+                      >
+                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <QrCode className="w-4 h-4" />}
+                        {saving ? 'Generating…' : 'Generate QR Code'}
+                      </button>
+                      {publicUrl && (
+                        <div className="bg-cream-50 rounded-xl p-3 border border-cream-200">
+                          <p className="text-xs font-semibold text-gray-500 font-body mb-1 uppercase tracking-wide">
+                            Public URL (QR will point to)
+                          </p>
+                          <p className="text-xs text-forest-700 font-body font-mono break-all">
+                            {publicUrl}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <div className="text-center py-8">
                       <div className="w-40 h-40 bg-gray-100 rounded-2xl mx-auto mb-3 skeleton" />
